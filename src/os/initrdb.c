@@ -2,6 +2,10 @@
 #include "PR/rdb.h"
 #include "PR/os_internal.h"
 
+#ifdef BBPLAYER
+u32 __osRdb_IP6_Empty;
+#endif
+
 rdbPacket* __osRdb_IP6_Data;
 u32 __osRdb_IP6_Size;
 u32 __osRdb_IP6_Ct;
@@ -24,8 +28,24 @@ void osInitRdb(u8* sendBuf, u32 sendSize) {
     __osRdb_IP6_Ct = 0;
     __osRdb_IP6_CurWrite = 0;
     __osRdb_IP6_CurSend = 0;
+#ifdef BBPLAYER
+    __osRdb_IP6_Empty = 1;
+#endif
 
     __osRestoreInt(mask);
 }
+
+#ifdef BBPLAYER
+void osResetRdb(void) {
+    u32 mask = __osDisableInt();
+
+    __osRdb_IP6_Empty = 1;
+    __osRdb_IP6_Ct = 0;
+    __osRdb_IP6_CurWrite = 0;
+    __osRdb_IP6_CurSend = 0;
+
+    __osRestoreInt(mask);
+}
+#endif
 
 #endif

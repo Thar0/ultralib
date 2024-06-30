@@ -53,26 +53,26 @@ static void _wcopy(u32* src, u32* dst, int bytes) {
 
 static void __osBbUnstashState(char* name, BbTicketId* tid, OSBbStateVector* sv, s32* binding, u32* stateDirty) {
     u32 dummy;
-    u32 p = 0;
+    u32 p = 0x100;
 
-    if (IO_READ(USB_BUFFER_80100(1, p)) == 0xBABE0002) {
+    if (IO_READ(USB_BDT_BUF(1, p)) == 0xBABE0002) {
         p += ALIGN(sizeof(u32), 4);
 
-        _wcopy(PHYS_TO_K1(USB_BUFFER_80100(1, p)), sv, sizeof(*sv));
+        _wcopy(PHYS_TO_K1(USB_BDT_BUF(1, p)), sv, sizeof(*sv));
         p += ALIGN(sizeof(*sv), 4);
 
-        _wcopy(PHYS_TO_K1(USB_BUFFER_80100(1, p)), binding, sizeof(s32) * 4);
+        _wcopy(PHYS_TO_K1(USB_BDT_BUF(1, p)), binding, sizeof(s32) * 4);
         p += ALIGN(sizeof(s32) * 4, 4);
         
-        _wcopy(PHYS_TO_K1(USB_BUFFER_80100(1, p)), name, sizeof(char) * 16);
+        _wcopy(PHYS_TO_K1(USB_BDT_BUF(1, p)), name, sizeof(char) * 16);
         p += ALIGN(sizeof(char) * 16, 4);
 
-        _wcopy(PHYS_TO_K1(USB_BUFFER_80100(1, p)), &dummy, sizeof(*tid));
+        _wcopy(PHYS_TO_K1(USB_BDT_BUF(1, p)), &dummy, sizeof(*tid));
         p += ALIGN(sizeof(*tid), 4);
 
         *tid = dummy;
 
-        _wcopy(PHYS_TO_K1(USB_BUFFER_80100(1, p)), stateDirty, sizeof(*stateDirty));
+        _wcopy(PHYS_TO_K1(USB_BDT_BUF(1, p)), stateDirty, sizeof(*stateDirty));
     } else {
         bzero(sv, sizeof(*sv));
         binding[0] = binding[1] = binding[2] = binding[3] = -1;
@@ -111,28 +111,28 @@ static void __osBbGameUnstashState(char* name, OSBbStateVector* sv, s32* binding
 
 static void __osBbStashState(char* name, BbTicketId tid, OSBbStateVector* sv, s32* binding, u32 stateDirty) {
     s32 dummy = tid;
-    u32 p = 0;
+    u32 p = 0x100;
 
-    IO_WRITE(USB_BUFFER_80100(1, p), 0xBABE0002);
+    IO_WRITE(USB_BDT_BUF(1, p), 0xBABE0002);
     p += ALIGN(sizeof(u32), 4);
 
-    _wcopy(sv, PHYS_TO_K1(USB_BUFFER_80100(1, p)), sizeof(*sv));
+    _wcopy(sv, PHYS_TO_K1(USB_BDT_BUF(1, p)), sizeof(*sv));
     p += ALIGN(sizeof(*sv), 4);
 
-    _wcopy(binding, PHYS_TO_K1(USB_BUFFER_80100(1, p)), sizeof(s32) * 4);
+    _wcopy(binding, PHYS_TO_K1(USB_BDT_BUF(1, p)), sizeof(s32) * 4);
     p += ALIGN(sizeof(s32) * 4, 4);
 
-    _wcopy(name, PHYS_TO_K1(USB_BUFFER_80100(1, p)), sizeof(char) * 16);
+    _wcopy(name, PHYS_TO_K1(USB_BDT_BUF(1, p)), sizeof(char) * 16);
     p += ALIGN(sizeof(char) * 16, 4);
 
-    _wcopy(&dummy, PHYS_TO_K1(USB_BUFFER_80100(1, p)), sizeof(tid));
+    _wcopy(&dummy, PHYS_TO_K1(USB_BDT_BUF(1, p)), sizeof(tid));
     p += ALIGN(sizeof(tid), 4);
 
-    _wcopy(&stateDirty, PHYS_TO_K1(USB_BUFFER_80100(1, p)), sizeof(stateDirty));
+    _wcopy(&stateDirty, PHYS_TO_K1(USB_BDT_BUF(1, p)), sizeof(stateDirty));
 }
 
 static void __osBbClearState(void) {
-    IO_WRITE(USB_BUFFER_80100(1, 0), 0);
+    IO_WRITE(USB_BDT_BUF(1, 0x100), 0);
 }
 
 static void __osBbGetStateFilename(char* name, char* stateName) {

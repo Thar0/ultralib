@@ -3,20 +3,26 @@
 #include "PR/region.h"
 
 #include "macros.h"
-
 #include "usb.h"
-
 #ident "$Revision: 1.1 $"
 
 OSMesgQueue __osBbUsbCtlrQ[2];
 void* __usb_svc_callback_reg;
 void* __usb_endpt_desc_reg;
 static OSThread __osBbUsbMgr[2];
-static char __osBbUsbMgrStacks[0x4000];
-static OSMesg __osBbUsbMesgs[256];
+static char __osBbUsbMgrStacks[2 * 0x2000];
+static OSMesg __osBbUsbMesgs[2 * 128];
 static __OSBbUsbMesg __osBbUsbEventMesg[2];
-static u8 __usb_svc_callback_buffer[0x200];
-static u8 __usb_endpt_desc_buffer[0x1800];
+static u8 __usb_svc_callback_buffer[OS_DCACHE_ROUNDUP_SIZE(2 * USB_SERVICE_ALLOC_MAX * sizeof(SERVICE_STRUCT))];
+static u8 __usb_endpt_desc_buffer[OS_DCACHE_ROUNDUP_SIZE(2 * 2 * sizeof(XD_STRUCT) * USB_NUM_ENDPOINTS)];
+
+#define USB_NUM_MSGS_PER_CTLR (ARRLEN(__osBbUsbMesgs) / 2)
+
+void __usbHwInit(void);
+
+void __usbDevWrite(_usb_ext_handle*);
+void __usbDevRead(_usb_ext_handle*);
+s32 __usbDevInterrupt(s32, __OSBbUsbMesg*);
 
 static s32 __osBbUsbInterrupt(s32 which, __OSBbUsbMesg* mp) {
     return __usbDevInterrupt(which, mp);
@@ -71,8 +77,8 @@ static void __osBbUsbMgrProc(char* arg) {
         mp = (__OSBbUsbMesg*)msg;
 
         switch (mp->um_type) {
-            case 0:
-            case 1:
+            case 0: // usb0
+            case 1: // usb1
                 ret = __osBbUsbInterrupt(which, mp);
                 break;
             case 4:
@@ -82,7 +88,7 @@ static void __osBbUsbMgrProc(char* arg) {
                 ret = __osBbUsbWrite(which, mp);
                 break;
             default:
-                ret = 0xC9;
+                ret = EUSBRINVAL;
                 break;
         }
 
@@ -95,27 +101,27 @@ static void __osBbUsbMgrProc(char* arg) {
 }
 
 static s32 __osBbUsbThreadInit(s32 which) {
-    if ((u32)which >= 2) {
+    if (which != 0 && which != 1) {
         return -1;
     }
 
-    osCreateMesgQueue(&__osBbUsbCtlrQ[which], &__osBbUsbMesgs[which * 128], 128);
+    osCreateMesgQueue(&__osBbUsbCtlrQ[which], &__osBbUsbMesgs[which * USB_NUM_MSGS_PER_CTLR], USB_NUM_MSGS_PER_CTLR);
 
-    osCreateThread(&__osBbUsbMgr[which], 0xC45 + which, (void*)__osBbUsbMgrProc,
+    osCreateThread(&__osBbUsbMgr[which], 0xC45 + which, (void (*)(void *))__osBbUsbMgrProc,
             &__osBbUsbCtlrQ[which],
-            &__osBbUsbMgrStacks[(which + 1) * 0x2000],
+            &__osBbUsbMgrStacks[(which + 1) * (sizeof(__osBbUsbMgrStacks) / 2)],
             (which == 1) ? 230 : 232);
     osStartThread(&__osBbUsbMgr[which]);
 
-    bzero(&__osBbUsbEventMesg[which], 0x28);
+    bzero(&__osBbUsbEventMesg[which], sizeof(__OSBbUsbMesg));
     __osBbUsbEventMesg[which].um_type = which != 0;
 
-    osSetEventMesg((which != 0) ? 0x1C : 0x1B, &__osBbUsbCtlrQ[which], &__osBbUsbEventMesg[which]);
+    osSetEventMesg((which != 0) ? OS_EVENT_USB1 : OS_EVENT_USB0, &__osBbUsbCtlrQ[which], &__osBbUsbEventMesg[which]);
     return 0;
 }
 
 s32 osBbUsbSetCtlrModes(s32 which, u32 mask) {
-    if ((u32)which >= 2) {
+    if (which != 0 && which != 1) {
         return -1;
     }
     _usb_ctlr_state[which].ucs_mask = mask;
@@ -127,14 +133,20 @@ s32 osBbUsbInit(void) {
     s32 i;
     s32 numctlr = 0;
 
-    __usb_svc_callback_reg = osCreateRegion(__usb_svc_callback_buffer, ARRLEN(__usb_svc_callback_buffer), 0xC, 0);
-    __usb_endpt_desc_reg = osCreateRegion(__usb_endpt_desc_buffer, ARRLEN(__usb_endpt_desc_buffer), 0x600, 0);
+    __usb_svc_callback_reg = osCreateRegion(__usb_svc_callback_buffer, sizeof(__usb_svc_callback_buffer), sizeof(SERVICE_STRUCT), 0);
+    __usb_endpt_desc_reg = osCreateRegion(__usb_endpt_desc_buffer, sizeof(__usb_endpt_desc_buffer), sizeof(XD_STRUCT) * USB_NUM_ENDPOINTS, 0);
 
     for (i = 0; i < 2; i++) {
         if (__osBbUsbThreadInit(i) == 0) {
             numctlr++;
         }
     }
+
+#ifdef BB_SA_1041
+    // TODO maybe the other way around
+    __usb_host_driver_register(&echo_host_driver);
+    __usb_host_driver_register(&rdb_host_driver);
+#endif
 
     __usbHwInit();
 

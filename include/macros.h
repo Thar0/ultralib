@@ -13,7 +13,9 @@
 #define __EGCS__
 #endif
 
+#ifndef ALIGN
 #define ALIGN(x, n) (((x) + ((n) - 1)) & ~((n) -1))
+#endif
 
 #define ARRLEN(x) ((s32)(sizeof(x) / sizeof(x[0])))
 

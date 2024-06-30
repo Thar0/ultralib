@@ -31,6 +31,10 @@
 #define RDB_TYPE_GtoH_DEBUG_READY       11
 #define RDB_TYPE_GtoH_KDEBUG            12
 #define RDB_TYPE_GtoH_PROF_DATA         22
+#ifdef BBPLAYER
+#define RDB_TYPE_GtoH_DATAB		23
+#define RDB_TYPE_GtoH_SYNC		25
+#endif
 
 
 #define RDB_TYPE_HtoG_LOG_DONE		13
@@ -42,14 +46,24 @@
 #define RDB_TYPE_HtoG_FREE_RAMROM	19
 #define RDB_TYPE_HtoG_KDEBUG            20
 #define RDB_TYPE_HtoG_PROF_SIGNAL       21
+#ifdef BBPLAYER
+#define RDB_TYPE_HtoG_DATAB             24
+#define RDB_TYPE_HtoG_SYNC_DONE         26
+#define RDB_TYPE_HtoG_DEBUG_DONE        27
+#endif
 
 
 #define RDB_PROF_ACK_SIG               1
 #define RDB_PROF_FLUSH_SIG             2
 #define PROF_BLOCK_SIZE			2048
 
+#ifdef BBPLAYER
+#define RDB_LOG_MAX_BLOCK_SIZE         0x1000
+#define RDB_DATA_MAX_BLOCK_SIZE        0x1000
+#else
 #define RDB_LOG_MAX_BLOCK_SIZE         0x8000
 #define RDB_DATA_MAX_BLOCK_SIZE        0x8000
+#endif
 
 
 /* GIO side address */

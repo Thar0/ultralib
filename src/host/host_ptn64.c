@@ -7,14 +7,22 @@
 
 #if BUILD_VERSION >= VERSION_J || !defined(_FINALROM)
 
+#if defined (BBPLAYER) && defined(_DEBUG)
+static volatile unsigned int* ptstat = (unsigned*)0xbff08004;
+static volatile unsigned int* ptport = (unsigned*)0xbff08000;
+static volatile unsigned int* n64piok = (unsigned*)PHYS_TO_K1(PI_STATUS_REG);
+static u32 isWaitPtQueueCreated = FALSE;
+static OSMesgQueue waitPtQueue ALIGNED(8);
+static OSMesg waitPtQueueBuf;
+#else
 static volatile unsigned int* ptwtmode = (unsigned*)0xbff08014;
 static volatile unsigned int* ptstat = (unsigned*)0xbff08004;
 static volatile unsigned int* ptport = (unsigned*)0xbff08000;
 static volatile unsigned int* n64piok = (unsigned*)PHYS_TO_K1(PI_STATUS_REG);
-
 static OSMesgQueue waitPtQueue ALIGNED(8);
 static OSMesg waitPtQueueBuf;
 static u32 isWaitPtQueueCreated = FALSE;
+#endif
 
 void __osPiRelAccess(void);
 void __osPiGetAccess(void);

@@ -110,10 +110,9 @@ s32 osBbExecApp(u32 addr) {
 
     // Set all PI operations allowed
     IO_WRITE(PI_54_REG, 0xFF);
-
-    // USB?
-    IO_WRITE(USB_REG_40010(0), 1);
-    IO_WRITE(USB_REG_40010(1), 1);
+    // Allow USB access
+    IO_WRITE(USB_ACCESS_REG(0), 1);
+    IO_WRITE(USB_ACCESS_REG(1), 1);
 
     if (__osBbIsBb >= 2) {
         IO_WRITE(MI_3C_REG, 0x01000000);
@@ -253,10 +252,9 @@ s32 osBbExecFile(s32 fd, char* name, OSBbLaunchMetaData* md, u8* buffer) {
     // Set all PI operations allowed
     IO_WRITE(PI_54_REG, 0xFF);
     IO_WRITE(PI_44_REG, 0x80000000);
-
-    // USB?
-    IO_WRITE(USB_REG_40010(0), 1);
-    IO_WRITE(USB_REG_40010(1), 1);
+    // Allow USB access
+    IO_WRITE(USB_ACCESS_REG(0), 1);
+    IO_WRITE(USB_ACCESS_REG(1), 1);
 
     IO_WRITE(MI_14_REG, (__osBbIsBb >= 2) ? 0x03000000 : 0x01000000);
 

@@ -2,7 +2,6 @@
 #include "PR/rcp.h"
 
 #include "usb.h"
-
 #ident "$Revision: 1.1 $"
 
 s32 osBbUsbDevWrite(OSBbUsbHandle h, u8* buf, s32 len, u64 off) {

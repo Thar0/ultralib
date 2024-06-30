@@ -152,10 +152,19 @@ extern void		osWriteHost(void *, u32);
 extern void		osAckRamromRead(void);
 extern void		osAckRamromWrite(void);
 
+#ifdef BBPLAYER
+/* BB versions of osReadHost and osWriteHost that returns upon error */
+extern s32		osBbReadHost(void *, u32);
+extern s32		osBbWriteHost(void *, u32);
+#endif
+
 /* RDB port operations */
 
 extern void             osInitRdb(u8 *sendBuf, u32 sendSize);
 
+#ifdef BBPLAYER
+extern void             osResetRdb();
+#endif
 
 #endif  /* defined(_LANGUAGE_C) || defined(_LANGUAGE_C_PLUS_PLUS) */
 

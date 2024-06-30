@@ -119,6 +119,9 @@ typedef struct OSMesgQueue_s {
 #define OS_EVENT_USB1             28    /* USB Controller 1 */
 #define OS_EVENT_UNK_29           29    /* TODO does this exist at all */
 #define OS_EVENT_MD               30    /* Related to card */
+
+#define OS_EVENT_RDB_UNK32        32
+#define OS_EVENT_RDB_UNK33        33
 #endif
 
 /* Flags to turn blocking on/off when sending/receiving message */

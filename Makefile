@@ -43,16 +43,12 @@ else
 DEBUGFLAG := -DNDEBUG
 endif
 
-ifeq ($(findstring libgultra,$(TARGET)),libgultra)
--include Makefile.gcc
-else ifeq ($(findstring libultra,$(TARGET)),libultra)
-
 ifeq ($(findstring ique_,$(VERSION)),ique_)
 -include Makefile.egcs
-else
+else ifeq ($(findstring libgultra,$(TARGET)),libgultra)
+-include Makefile.gcc
+else ifeq ($(findstring libultra,$(TARGET)),libultra)
 -include Makefile.ido
-endif
-
 else
 $(error Invalid Target)
 endif
@@ -149,7 +145,7 @@ NUM_OBJS_UNMATCHED = $(words $(UNMATCHED_OBJS))
 
 $(shell mkdir -p $(BASE_DIR) src $(foreach dir,$(SRC_DIRS),$(BUILD_DIR)/$(dir)))
 
-.PHONY: all clean distclean setup
+.PHONY: all clean distclean list_unmatched setup
 all: $(BUILD_AR)
 
 $(BUILD_AR): $(MARKER_FILES)
@@ -168,6 +164,9 @@ clean:
 distclean:
 	$(MAKE) -C tools distclean
 	$(RM) -rf extracted/ $(BUILD_ROOT)
+
+list_unmatched:
+	$(info $(UNMATCHED_OBJS))
 
 setup:
 	$(MAKE) -C tools

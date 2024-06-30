@@ -677,7 +677,8 @@ usb0:
     beqz    t1, usb0x
 
     andi    s1, s1, 0x3bc0
-    li      t1, 0x100000
+    // Disable the USB0 interrupt, acknowledgements and re-enabling are done later in the ISR
+    li      t1, (1 << 20)
     sw      t1, PHYS_TO_K1(MI_BASE_REG + 0x3C)
     li      a0, MESG(OS_EVENT_USB0)
     jal     send_mesg
@@ -688,7 +689,8 @@ usb1:
     beqz    t1, usb1x
 
     andi    s1, s1, 0x37c0
-    li      t1, 0x400000
+    // Disable the USB1 interrupt, acknowledgements and re-enabling are done later in the ISR
+    li      t1, (1 << 22)
     sw      t1, PHYS_TO_K1(MI_BASE_REG + 0x3C)
     li      a0, MESG(OS_EVENT_USB1)
     jal     send_mesg
